@@ -1,0 +1,109 @@
+/*
+Parijat Tripathi 
+Fall 2020 
+The following program is a command line application that aims to let the user search a text file, and utilize some built 
+in functionality for the users searches. 
+*/
+
+#include <stdio.h>
+#include <string.h>
+#include <stdbool.h>
+#include <ctype.h>
+#include <stdlib.h>
+
+
+#define MAX_LINE_LENGTH 1000
+#define SIZE 50
+
+
+
+bool IGNORE_CASE = false; 
+bool LINE_CASE = false;
+bool HELP_CASE = false;
+bool SAFE_CASE = false;
+
+//compute function will take in argc, and argv from the main function
+// compute will also point to an array with the search word stored in an array 
+// from the main function. 
+void compute(char *c, int argc, char **argv)
+{ 
+  char line[MAX_LINE_LENGTH];
+  
+  while (fgets(line, MAX_LINE_LENGTH, stdin)){
+    
+    //IGNORE_CASE is the boolean that will process the -i flag.
+    if (IGNORE_CASE){
+      for(int i = 0; line[i]; i++){
+        line[i] = tolower(line[i]);
+      }
+      for (int i = 0; c[i]; i++){
+        c[i] = tolower(c[i]);
+      }
+      char *d = &line[0];
+      char *f = strstr(d,c);
+      if (f){
+        printf("%s\n" , line);
+      }
+      else{
+        NULL;
+      }
+    }
+    
+    //LINE_CASE is the boolean that will process the -n flag.
+    if(LINE_CASE){
+      char *e = &line[0];
+      int counter = 1; 
+      if (strstr(e,c)){
+        while(*e != '\0'){
+          counter++; 
+          e++;
+        }
+       printf(" %s Line#: %d" , line, counter); 
+     }
+  }
+  //HELP_CASE is the boolean that will process the -h flag.
+  if (HELP_CASE){
+    printf("In order to utilize the functionality of igrep the following commands are provided\n"); 
+    printf("-- -h will bring the user to this useage where specs of the most recent installment of igrep can be found. The user will also exit the program. -h\n");
+    printf("-- -i will search for a keyword, given by the user in the textfile, ignoring case -i\n");
+    printf("-- -n will also search for a keyword, given by the user, in the textfile and print the line number -n\n");
+    printf("keyword and flags can be entered in any order, however, no other flags are supported on this model.\n "); 
+      exit(0);
+    
+  }
+ } 
+ 
+}
+//main function that will recieve command line arguments that user enters
+//argc will be the number of commands, while argv will be a pointer to each of those commands
+// argv will store commands of argc as an array.
+//returns integers when ran. 
+int main(int argc, char **argv)
+{
+  char s[SIZE]; 
+  for(int i = 1; i<argc; i++){
+    char *a = argv[i];
+    if (strcmp(a , "-i") == 0){
+      IGNORE_CASE = true; 
+    }
+    else if (strcmp(a, "-n") == 0){
+      LINE_CASE = true; 
+    }
+    else if (strcmp(a , "-h") == 0){
+      HELP_CASE = true;
+    } 
+    else if (strncmp(a, "-" , 1) > 0){
+      strcpy(s , a); 
+    }
+    else{
+      printf("The commands that you have entered are not supported in this model. \n");
+      exit(1);
+    }
+    
+  }
+  compute(s, argc, argv);
+ }
+
+
+   
+
