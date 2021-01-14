@@ -1,0 +1,228 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
+#include <assert.h>
+
+#define buffer_len 100
+
+typedef struct Node{
+  struct Node *key[9];
+  struct Node *parent;
+  char *data;
+  int number; 
+}Node;
+
+typedef struct Trie_Node{
+  struct Node *root;  
+}Trie_Node;
+
+int *Converter(char *word);
+void add_data(Node *Node, char *word);
+void add_child(Node *parent, int index, int num);
+void add(Node *head, char *word);
+Node *newNode(Node *parent, int num);
+Trie_Node *newTrie();
+void freeTrie(Trie_Node *trie);
+void freeNode(Node *node);
+void freeSubNode(Node **node);
+void freeRoot(Node *node);
+
+//we will need to return a pointer to a number here
+//this should check all of the possibilties for each letter in the word.
+
+int *Converter(char *c){
+    static int seq[buffer_len];
+   //for each new iteartion lets clean up the array.  
+   for(int i = 0; i < 100; i++){
+      seq[i] = 0;
+   }
+   int i = 0;
+   while(i < strlen(c)){
+     if(c[i] == ' ') { seq[i] = 0;  break; }
+     else if('a' == c[i] || 'b' == c[i] || 'c' == c[i]){
+       seq[i] = 2;
+     }
+     else if('d' == c[i] || 'e' == c[i] || 'f' == c[i]){ 
+        seq[i] = 3;
+     }
+     else if('g' == c[i] || 'h' == c[i] || 'i' == c[i]){
+        seq[i] = 4;
+     }
+     else if('j' == c[i] || 'k' == c[i] || 'l' == c[i]){
+        seq[i] = 5;
+     }
+     else if('m' == c[i] || 'n' == c[i] || 'o' == c[i]){
+         seq[i] = 6;
+     }
+     else if('p' == c[i] || 'q' == c[i] || 'r' == c[i] || 's' == c[i]){
+       seq[i] = 7;
+     }
+     else if('t' == c[i] || 'u' == c[i] || 'v' == c[i]){
+       seq[i] = 8;
+     }
+     else if('w' == c[i] || 'x'==c[i] || 'y' == c[i] || 'z' == c[i]){
+        seq[i] = 9; 
+     }
+    i++;
+   }
+   return seq;
+}
+
+// searches for the word created by the sequence of numbers provided
+Node *searchTrie(Trie_Node *trie, char *sequence) {
+  Node *temp = trie->root;
+  int num = 0;
+  int i = 0;
+  while (sequence[i + 1] != '\0') { // for each element in the sequence
+    num = sequence[i] - 48;         // assign it a value
+    if (num == -13) { // if it is "#" check if temp children is not NULL then
+                      // set temp to that child
+      if (temp->key[8] != NULL) {
+        temp = temp->key[8];
+      } else {
+        return NULL;
+      }
+    } else {
+      if (temp->key[num - 2] !=
+          NULL) { // if its child at the index of the number is not NULL go on
+        temp = temp->key[num - 2]; // set temp to its new child
+      } else { // if it is NULL then return NULL because a word for that
+               // sequence does not exist
+        return NULL;
+      }
+    }
+    i++;
+  } // end of for loop should result in the temp node being equal to the a word
+    // correlated to that number sequence
+  return temp;
+}
+
+
+void add_data(struct Node *head, char *word){
+   head->data = malloc(100 * sizeof(char)); 
+   strcpy(head->data, word);
+}void add_child(struct Node *parent, int index, int num){
+   parent->key[index] = newNode(parent, num);
+}
+
+//when checking for a null pointer we should check to see if not null, since if it is in fact a null pointer then the 
+//segmentation fault will occur. 
+
+void add(struct Node *head, char *word){
+     struct Node *temp = head;
+     int *get;
+     get = Converter(word);
+     int i =0;
+     while(get[i] != 0){
+      if(temp->key[get[i]-2] != NULL){
+        temp=temp->key[get[i]-2];
+      }else{
+        add_child(temp, get[i]-2, get[i]);
+	temp=temp->key[get[i]-2];
+      }
+      i++;
+    }if(temp->data !=  NULL){
+      while(temp->key[8] != NULL){
+       temp = temp->key[8];
+      }
+       add_child(temp,8,10);
+       temp= temp->key[8]; 
+       add_data(temp, word);
+    }else{
+       add_data(temp, word);
+    }
+}
+Node *newNode(Node *parent, int num)
+{
+   Node *n = malloc(1 * sizeof(Node));
+   n -> data = NULL;
+   n -> number = num;
+   for(int i = 0; i < 9; i++){
+     n->key[i] = NULL;
+   }
+   n->parent = parent;
+   return n;
+}
+
+Trie_Node *newTrie_Node(){
+  Trie_Node *b = malloc( 1 * sizeof(Trie_Node));
+  b->root = newNode(NULL, 0);
+  return b;
+}
+
+void free_SubNode(Node **node){
+  for(int i = 0; i < 9; i++){
+    if(node[i] != NULL){
+      free_SubNode(node[i]->key);
+      //free_Node(node[i]);
+    }
+  }
+}
+
+void free_Root(Node *node ){
+  free_SubNode(node->key);
+  //free_Node(node);
+}
+
+void free_Node(Node *node)
+{
+  free(node->data);
+  free(node);
+}
+
+void free_Trie(Trie_Node *Trie){
+  free_Root(Trie->root);
+  free(Trie);
+}
+
+int main(int argc, char **argv)
+{
+  struct Trie_Node *temp = newTrie_Node();
+  if (argc < 2){
+    printf("Missing file argument\n");
+    exit(1);	
+  }
+  char *filename = argv[1];
+  FILE *file;
+  char buffer[buffer_len];
+  file = fopen(filename, "r");
+
+  //read all lines
+  while(fgets(buffer, buffer_len, file)){
+    //print the line
+    add(temp->root, buffer);
+  } 
+  fclose(file);
+  Node *word = NULL;
+  printf("Enter \"exit\" to quit.\n");
+  printf("Enter Key Sequence (or \"#\" for next word):\n");
+  while (fgets(buffer, 100, stdin)) {
+    if (strncmp(buffer, "exit", 4) == 0) {
+      break;
+    }
+    if (strncmp(buffer, "#", 1) ==
+        0) { // if requesting next word with # check if the current Node is NULL
+             // and check if it has a next child
+      if (word != NULL) {
+        if (word->key[8] != NULL) { // if it has a child print it
+          word = word->key[8];
+          printf("%s", word->data);
+        } else { // otherwise print one doesnt exist in dictionary
+          printf("There are no more T9onyms.\n");
+        }
+      } else {
+        printf("Please enter a valid request.\n");
+      }
+    } else {
+      word = searchTrie(temp, buffer);
+      if (word == NULL) {
+        printf("Not found in current dictionary.\n");
+      } else {
+        printf("%s", word->data);
+      }
+    }
+    printf("Enter Key Sequence (or \"#\" for next word):\n");
+  } // end of while loop when the program has been exited by the user
+  free_Trie(temp);
+}
